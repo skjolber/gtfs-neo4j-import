@@ -20,7 +20,7 @@ public class GtfsTransformEngineRunner {
 	public static void main(String[] args) throws Exception {
 		
 		if(args.length != 3) {
-			System.out.println("Usage: <input zip file or HTTP URL> <output directory> <script output directory>");
+			System.out.println("Usage: <input zip file or HTTP URL> <CSV output directory> <script output directory>");
 			System.exit(1);
 			return;
 		}
@@ -55,7 +55,7 @@ public class GtfsTransformEngineRunner {
 		build.setOutputDirectory(outputDirectory);
 		
 		InputStream fis;
-		if(!args[0].startsWith("http://") && !args[0].startsWith("http://")) {
+		if(!args[0].contains("://")) {
 			File input = new File(args[0]);
 			if(!input.exists()) {
 				System.out.println("File " + input + " does not exist");
@@ -73,15 +73,19 @@ public class GtfsTransformEngineRunner {
 			fis = url.openStream();
 		}
 
-        ZipInputStream zis = new ZipInputStream(fis);
-        ZipEntry entry;
-        while ((entry = zis.getNextEntry()) != null) {
-            System.out.println("Process: " + entry.getName() + ", " + entry.getSize());
-        	
-        	build.process(entry.getName(), new CloseShieldInputStream(zis));
-        }
+		try {
+	        ZipInputStream zis = new ZipInputStream(fis);
+	        ZipEntry entry;
+	        while ((entry = zis.getNextEntry()) != null) {
+	            System.out.println("Process: " + entry.getName() + ", " + entry.getSize());
+	        	
+	        	build.process(entry.getName(), new CloseShieldInputStream(zis));
+	        }
+		} finally {
+			fis.close();
+		}
 		
-        File cypher = new File(scriptOutputDirectory, "initalize.cypher");
+        File cypher = new File(scriptOutputDirectory, "initialize.cypher");
         write(cypher, build.toCypherStatement());
         System.out.println("Wrote " + cypher);
         

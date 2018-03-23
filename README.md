@@ -22,21 +22,45 @@ Example dependency config:
 </dependency>
 ```
 
+# Quickstart
+Run the `quickstart.sh` script for a working demo of the below. 
+
 # Usage
-Build the project, download Neo4j and some GTFS file.
+
+Build the project using the command
+
+    mvn clean package
+    
+then run the utility
 
 ```
-java -jar target/gtfs-neo4j-import.jar <input zip file or HTTP URL> <CSV output dir> <script output dir>
+java -jar target/gtfs-neo4j-import.jar <input> <CSV output dir> <Script output dir>
 ```
 
-This will create a set of CSV files, and two additional helper files; `import.sh` and `initialize.cypher`.
+with the paramters
+
+| Name | Description | Example |
+| -------- | ----------- | ------- |
+| input | GTFS input file (path or URL) | http://host/gtfs.zip |
+| CSV output dir | Output folder for CSV files (which fill be imported into Neo4j) | /tmp/neo4j/csv | 
+| Script output dir | Output folder for helper scripts: | /tmp/neo4j/script|
+| | `import.sh` | Script for `neo4j-admin import` command line. |
+| | `initialize.cypher` | Cypher initialization script. For creating indexes after import. |
 
 ### Creating the database
-Run the `import.sh` script.
+Run the generated `import.sh` script.
 
 ```
-./import.sh <Neo4j home dir> <CSV output dir> <database name>
+./import.sh <neo4j home> <CSV input dir> <database name>
 ```
+
+with the paramters
+
+| Name | Description | Example |
+| -------- | ----------- | ------- |
+| neo4j home | Neo4j home directory| /opt/neo4j |
+| CSV input dir | Input folder for CSV files (same as CSV output dir above). | /tmp/neo4j/csv |
+| database name | Name of the imported database | graph.db |
 
 Database name is usually `graph.db`. If there is a preexisting database, remove it using the command
 
@@ -48,12 +72,18 @@ rm -rf <Neo4j home dir>/data/databases/graph.db
 Run the `initialize.sh` or `setup.sh` script found under `src/main/script`.
 
 ```
-./initialize.sh <Neo4j home dir> <script output dir>/initalize.cypher <password>
+./initialize.sh <neo4j home> <cypher script> <password>
 ```
 
-where `password` the login password for Neo4j.
+with the paramters
 
-The `setup.sh` script has the same syntax but additionally sets the default password on a fresh Neo4j installation.
+| Name | Description | Example |
+| -------- | ----------- | ------- |
+| neo4j home | Neo4j home directory| /opt/neo4j |
+| cypher script | Path to cypher script used for initialization, typically to `initialize.cypher` | /tmp/neo4j/script/initialize.cypher |
+| password | Password for neo4j user on the Neo4j runtime | abcdef |
+
+The `setup.sh` script performs the same function but additionally sets the default password on a fresh Neo4j installation.
 
 Then start Neo4j using the command
 
@@ -112,3 +142,4 @@ Feel free to connect with me on [LinkedIn], see also my [Github page].
 [General Transit Feed Specification]:			https://en.wikipedia.org/wiki/General_Transit_Feed_Specification
 [Neo4j]:    			https://neo4j.com
 [db.png]: 	https://raw.githubusercontent.com/skjolber/gtfs-neo4j-import/master/docs/images/db.png "Neo4j db schema"
+[download]:         https://neo4j.com/download/
