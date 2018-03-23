@@ -132,6 +132,16 @@ Feel free to connect with me on [LinkedIn], see also my [Github page].
 # History
  - [1.0.0]: Initial release.
 
+# See also
+Related links
+
+  * [hamburg-gtfs-neo4j](https://github.com/aamalik/hamburg-gtfs-neo4j)
+  * [neo4j-gtfs](https://github.com/tguless/neo4j-gtfs)
+  * [Loading General Transport Feed Spec (GTFS) files into Neo4j - part 1/2](http://blog.bruggen.com/2015/11/loading-general-transport-feed-spec.html)
+  * [Querying GTFS data - using Neo4j 2.3 - part 2/2](http://blog.bruggen.com/2015/11/querying-gtfs-data-using-neo4j-23-part.html)
+  
+
+
 [Apache 2.0]: 			http://www.apache.org/licenses/LICENSE-2.0.html
 [issue-tracker]:		https://github.com/skjolber/gtfs-neo4j-import/issues
 [Maven]:				http://maven.apache.org/
