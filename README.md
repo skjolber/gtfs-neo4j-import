@@ -7,6 +7,8 @@ Projects using this library will benefit from:
   * command-line tool 
   * helper scripts for import and database post-processing (index creation)
 
+As a performance example, from ZIP to database takes 3-4 minutes for a 110 MB GTFS file on my laptop.
+
 Bugs, feature suggestions and help requests can be filed with the [issue-tracker].
 
 ## Obtain
@@ -23,7 +25,7 @@ Example dependency config:
 ```
 
 # Quickstart
-Run the `quickstart.sh` script for a working demo of the below. 
+Run the `quickstart.sh` script for a working demo of the below.  
 
 # Usage
 
