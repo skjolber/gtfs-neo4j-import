@@ -77,7 +77,12 @@ public class GtfsTransformEngineRunner {
 	        ZipInputStream zis = new ZipInputStream(fis);
 	        ZipEntry entry;
 	        while ((entry = zis.getNextEntry()) != null) {
-	            System.out.println("Process: " + entry.getName() + ", " + entry.getSize());
+	        	long size = entry.getSize();
+	        	if(size != -1L) {
+	        		System.out.println("Process: " + entry.getName() + " size " + (entry.getSize()/1024) + "KB");
+	        	} else {
+	        		System.out.println("Process: " + entry.getName());
+	        	}
 	        	
 	        	build.process(entry.getName(), new CloseShieldInputStream(zis));
 	        }

@@ -19,14 +19,14 @@ public class DayTransform implements Transform {
 	}
 	
 	@Override
-	public void writeFirst(String[] fields) {
+	public void initialize(String[] fields) {
 		List<String> list = new ArrayList<>(Arrays.asList(fields));
 		list.add("day");
-		delegate.writeFirst(list.toArray(new String[list.size()]));
+		delegate.initialize(list.toArray(new String[list.size()]));
 	}
 	
 	@Override
-	public void writeNext(Map<String, String> line) {
+	public void write(Map<String, String> line) {
 		
 		String[] days = new String[] {"monday","tuesday","wednesday","thursday","friday","saturday","sunday"};
 
@@ -35,7 +35,7 @@ public class DayTransform implements Transform {
 			if(value.equals("1")) {
 				Map<String, String> dayLine = new HashMap<>(line);
 				dayLine.put("day", day);
-				delegate.writeNext(dayLine);
+				delegate.write(dayLine);
 			}
 		}
 		

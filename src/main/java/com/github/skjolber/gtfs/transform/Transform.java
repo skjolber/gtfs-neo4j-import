@@ -6,9 +6,9 @@ import java.util.Map;
 
 public interface Transform {
 
-	void writeFirst(String[] line);
+	void initialize(String[] line);
 
-	void writeNext(Map<String, String> line);
+	void write(Map<String, String> line);
 	
 	String toImportStatement() throws IOException;
 	String toCypherStatement() throws IOException;

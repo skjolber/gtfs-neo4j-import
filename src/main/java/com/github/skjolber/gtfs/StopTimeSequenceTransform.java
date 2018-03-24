@@ -18,13 +18,13 @@ public class StopTimeSequenceTransform implements Transform {
 	}
 	
 	@Override
-	public void writeNext(Map<String, String> line) {
+	public void write(Map<String, String> line) {
 		
 		String string = line.get("stop_sequence");
 		if(!string.equals("0")) {
 			int lineNumber = Integer.parseInt(line.get("lineNumber"));
 			line.put("lineNumberMinus1", Integer.toString(lineNumber - 1));
-	        delegate.writeNext(line);
+	        delegate.write(line);
 		}
         
 	}
@@ -50,10 +50,10 @@ public class StopTimeSequenceTransform implements Transform {
 	}
 
 	@Override
-	public void writeFirst(String[] fields) {
+	public void initialize(String[] fields) {
 		List<String> list = new ArrayList<>(Arrays.asList(fields));
 		list.add("lineNumberMinus1");
-		delegate.writeFirst(list.toArray(new String[list.size()]));
+		delegate.initialize(list.toArray(new String[list.size()]));
 	}
 
 	@Override

@@ -1,8 +1,10 @@
 package com.github.skjolber.gtfs.transform;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -53,16 +55,15 @@ public abstract class AbstractTransform implements Transform {
 	
 	
 	protected String source;
-	
 	protected String destination;
 	
 	protected File outputFile;
-	
 	protected CSVWriter writer;
 	
 	protected String relation;
 	protected String type;
 	protected List<String> indexes = new ArrayList<>();
+	protected List<String> uniqueConstraints = new ArrayList<>();
 	
 	public String toImportStatement() throws IOException {
 		if(outputFile == null) {
@@ -85,15 +86,22 @@ public abstract class AbstractTransform implements Transform {
 			b.append(")");
 			b.append("\n");
 		}
-		
+
+		for(String constraint : uniqueConstraints) {
+			b.append("create constraint on (t:");
+			b.append(type);
+			b.append(") assert t.");
+			b.append(constraint);
+			b.append(" is unique\n");
+		}
+
 		return b.toString();
 	}
-
 
 	public void open(File outputDirectory) throws Exception {
 		this.outputFile = new File(outputDirectory, destination);
 
-		FileOutputStream fout = new FileOutputStream(outputFile);
+		OutputStream fout = new BufferedOutputStream(new FileOutputStream(outputFile), 8 * 1024*1024);
 		
 		OutputStreamWriter writer = new OutputStreamWriter(fout, StandardCharsets.UTF_8);
 
@@ -133,4 +141,10 @@ public abstract class AbstractTransform implements Transform {
 	public void setIndexes(List<String> indexes) {
 		this.indexes = indexes;
 	}
+
+	public void setUniqueConstraints(List<String> constraints) {
+		this.uniqueConstraints = constraints;
+	}
+	
+
 }

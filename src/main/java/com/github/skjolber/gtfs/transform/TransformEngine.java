@@ -48,7 +48,7 @@ public class TransformEngine {
 				throw new RuntimeException("No first line");
 			}
 			for (Transform transform : transforms) {
-				transform.writeFirst(first);
+				transform.initialize(first);
 			}
 	
 			int lineNumber = 1;
@@ -68,7 +68,7 @@ public class TransformEngine {
 				fields.put("lineNumber", Integer.toString(lineNumber++));
 				
 				for (Transform transform : transforms) {
-					transform.writeNext(fields);
+					transform.write(fields);
 				}
 				fields.clear();
 			} while(true);

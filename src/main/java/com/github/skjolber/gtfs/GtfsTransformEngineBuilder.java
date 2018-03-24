@@ -2,6 +2,8 @@ package com.github.skjolber.gtfs;
 
 import java.io.File;
 
+import com.github.skjolber.gtfs.transform.AbstractLabelTransform;
+import com.github.skjolber.gtfs.transform.LabelTransform;
 import com.github.skjolber.gtfs.transform.Transform;
 import com.github.skjolber.gtfs.transform.TransformBuilder;
 import com.github.skjolber.gtfs.transform.TransformEngine;
@@ -12,9 +14,106 @@ import com.github.skjolber.gtfs.transform.TransformEngine;
  * the right connections will be made. Use my_id:ID(MyId) to keep original ids.
  * 
  * Query 'call db.schema()' to inspect result. 
+ * 
+ * https://stackoverflow.com/questions/22340475/neo4j-labels-vs-properties-vs-relationship-node
  */
 
 public class GtfsTransformEngineBuilder {
+
+	private LabelTransform wheelChairLabel = new AbstractLabelTransform("wheelchair_accessible") {
+		@Override
+		public String transformLabel(String value) {
+			if(value != null && value.equals("1")) {
+				return "WHEELCHAIR";
+			}
+			return null;
+		}
+	}; 
+
+	private LabelTransform wheelChairBoardingLabel = new AbstractLabelTransform("wheelchair_boarding") {
+		@Override
+		public String transformLabel(String value) {
+			if(value != null && value.equals("1")) {
+				return "WHEELCHAIR_BOARDING";
+			}
+			return null;
+		}
+	}; 
+	
+	private LabelTransform stopLocationType = new AbstractLabelTransform("location_type") {
+		@Override
+		public String transformLabel(String value) {
+			if(value != null) {
+				if(value.equals("1")) {
+					return "STATION";
+				} else if(value.equals("2")) {
+					return "STATION_ENTRANCE";
+				}
+			}
+			return null;
+		}
+	}; 
+	
+	private LabelTransform bikeLabel = new AbstractLabelTransform("bikes_allowed") {
+		@Override
+		public String transformLabel(String value) {
+			if(value != null && value.equals("1")) {
+				return "BIKE";
+			}
+			return null;
+		}
+	}; 
+	
+	private LabelTransform directionLabel = new AbstractLabelTransform("direction_id") {
+		@Override
+		public String transformLabel(String value) {
+			if(value != null) {
+				if(value.equals("1")) {
+					return "INBOUND";
+				} else if(value.equals("2")) {
+					return "OUTBOUND";
+				}
+			}
+			return null;
+		}
+	}; 
+
+/*	
+	private LabelTransform routeTypeLabel = new AbstractLabelTransform("route_type") {
+		@Override
+		public String transformLabel(String value) {
+			if(value != null) {
+				switch(value) {
+				case "0" : {
+					return "TRAM_STREETCAR_LIGHT_RAIL";
+				}
+				case "1" : {
+					return "SUBWAY";
+				}
+				case "2" : {
+					return "RAIL";
+				}
+				case "3" : {
+					return "BUS";
+				}
+				case "4" : {
+					return "FERRY";
+				}
+				case "5" : {
+					return "CABLE_CAR";
+				}
+				case "6" : {
+					return "GONDOLA";
+				}
+				case "7" : {
+					return "FUNICULAR";
+				}
+				}
+			}
+			return null;
+		}
+	}; 
+	*/
 
 	// trips:
 	//  - trip
@@ -25,14 +124,18 @@ public class GtfsTransformEngineBuilder {
 	private Transform trip = new TransformBuilder()
 			.withDestination("trips.csv")
 			.withSource("trips.txt")
-			.withMapping("trip_id", "trip_id:ID(Trip)")
+			.withRequiredMapping("trip_id", "trip_id:ID(Trip)")
+			.withIndex("trip_id")
 			.withType("Trip")
+			.withLabel(wheelChairLabel)
+			.withLabel(bikeLabel)
+			.withLabel(directionLabel)
 			.build();
 	
 	private Transform services = new TransformBuilder()
 			.withDestination("services.csv")
 			.withSource("trips.txt")
-			.withMapping("service_id", ":ID(Service)")
+			.withRequiredMapping("service_id", ":ID(Service)")
 			.withFilter("service_id")
 			.withType("Service")
 			.build();
@@ -41,16 +144,18 @@ public class GtfsTransformEngineBuilder {
 	private Transform tripUsesRoute = new TransformBuilder()
 			.withDestination("tripUsesRoute.csv")
 			.withSource("trips.txt")
-			.withMapping("trip_id", ":START_ID(Trip)")
-			.withMapping("route_id", ":END_ID(Route)")
+			.withRequiredMapping("trip_id", ":START_ID(Trip)")
+			.withRequiredMapping("route_id", ":END_ID(Route)")
 			.withRelation("USES")
 			.build();
 
 	private Transform tripImplementsService = new TransformBuilder()
 			.withDestination("tripImplementsService.csv")
 			.withSource("trips.txt")
-			.withMapping("trip_id", ":START_ID(Trip)")
-			.withMapping("service_id", ":END_ID(Service)")
+			.withRequiredMapping("trip_id", ":START_ID(Trip)")
+			.withRequiredMapping("service_id", ":END_ID(Service)")
+			.withOptionalMapping("trip_headsign", "headsign")
+			.withOptionalMapping("trip_short_name", "short_name")
 			.withRelation("IMPLEMENTS")
 			.build();
 
@@ -59,11 +164,11 @@ public class GtfsTransformEngineBuilder {
 	private Transform agency = new TransformBuilder()
 			.withDestination("agencies.csv")
 			.withSource("agency.txt")
-			.withMapping("agency_id", "agency_id:ID(Agency)")
-			.withMapping("agency_name", "name")
-			.withMapping("agency_url", "url")
-			.withMapping("agency_timezone", "timezone")
-			.withMapping("agency_phone", "phone")
+			.withRequiredMapping("agency_id", "agency_id:ID(Agency)")
+			.withRequiredMapping("agency_name", "name")
+			.withOptionalMapping("agency_url", "url")
+			.withOptionalMapping("agency_timezone", "timezone")
+			.withOptionalMapping("agency_phone", "phone")
 			.withIndex("agency_id")
 			.withType("Agency")
 			.build();
@@ -75,19 +180,21 @@ public class GtfsTransformEngineBuilder {
 	private Transform routes = new TransformBuilder()
 			.withDestination("routes.csv")
 			.withSource("routes.txt")
-			.withMapping("route_id", "route_id:ID(Route)")
-			.withMapping("route_short_name", "short_name")
-			.withMapping("route_long_name", "long_name")
-			.withMapping("route_type", "type:int")
+			.withRequiredMapping("route_id", "route_id:ID(Route)")
+			.withOptionalMapping("route_short_name", "short_name")
+			.withOptionalMapping("route_long_name", "long_name")
+			.withOptionalMapping("route_type", "type:int")
+			.withOptionalMapping("route_url", "url")
 			.withType("Route")
 			.withIndex("route_id")
+			//.withLabel(routeTypeLabel)
 			.build();
 	
 	private Transform agencyOperatesRoute = new TransformBuilder()
 			.withDestination("agencyOperatesRoute.csv")
 			.withSource("routes.txt")
-			.withMapping("agency_id", ":START_ID(Agency)")
-			.withMapping("route_id", ":END_ID(Route)")
+			.withRequiredMapping("agency_id", ":START_ID(Agency)")
+			.withRequiredMapping("route_id", ":END_ID(Route)")
 			.withRelation("OPERATES")
 			.build();
 	
@@ -100,17 +207,17 @@ public class GtfsTransformEngineBuilder {
 	private Transform calendar = new TransformBuilder()
 			.withDestination("calendar.csv")
 			.withSource("calendar.txt")
-			.withMapping("lineNumber", ":ID(Calendar)")
-			.withMapping("start_date", "start_date")
-			.withMapping("end_date", "end_date")
+			.withRequiredMapping("lineNumber", ":ID(Calendar)")
+			.withRequiredMapping("start_date", "start_date")
+			.withRequiredMapping("end_date", "end_date")
 			.withType("Calendar")
 			.build();
 	
 	private Transform calendarSchedulesService = new TransformBuilder()
 			.withDestination("calendarSchedulesService.csv")
 			.withSource("calendar.txt")
-			.withMapping("service_id", ":START_ID(Service)")
-			.withMapping("lineNumber", ":END_ID(Calendar)")
+			.withRequiredMapping("service_id", ":START_ID(Service)")
+			.withRequiredMapping("lineNumber", ":END_ID(Calendar)")
 			.withRelation("SCHEDULES")
 			.build();
 	
@@ -118,7 +225,7 @@ public class GtfsTransformEngineBuilder {
 			new TransformBuilder()
 				.withDestination("days.csv")
 				.withSource("calendar.txt")
-				.withMapping("day", "day_id:ID(Day)")
+				.withRequiredMapping("day", "day_id:ID(Day)")
 				.withFilter("day")
 				.withIndex("day_id")
 				.withType("Day")
@@ -129,8 +236,8 @@ public class GtfsTransformEngineBuilder {
 			new TransformBuilder()
 				.withDestination("caldendarRepeatsDay.csv")
 				.withSource("calendar.txt")
-				.withMapping("lineNumber", ":START_ID(Calendar)")
-				.withMapping("day", ":END_ID(Day)")
+				.withRequiredMapping("lineNumber", ":START_ID(Calendar)")
+				.withRequiredMapping("day", ":END_ID(Day)")
 				.withRelation("REPEATS")
 				.build()
 			);
@@ -138,7 +245,7 @@ public class GtfsTransformEngineBuilder {
 	private Transform dates = new TransformBuilder()
 			.withDestination("dates.csv")
 			.withSource("calendar_dates.txt")
-			.withMapping("date", "date:ID(CalendarDate)")
+			.withRequiredMapping("date", "date:ID(CalendarDate)")
 			.withFilter("date")
 			.withType("CalendarDate")
 			.build();
@@ -146,30 +253,34 @@ public class GtfsTransformEngineBuilder {
 	private Transform serviceRunsOnDates = new TransformBuilder()
 			.withDestination("serviceRunsOnDates.csv")
 			.withSource("calendar_dates.txt")
-			.withMapping("service_id", ":START_ID(Service)")
-			.withMapping("date", ":END_ID(CalendarDate)")
-			.withMapping("exception_type", "exception_type")
+			.withRequiredMapping("service_id", ":START_ID(Service)")
+			.withRequiredMapping("date", ":END_ID(CalendarDate)")
+			.withRequiredMapping("exception_type", "exception_type")
 			.withRelation("RUNS_ON")
 			.build();
 	
+	// https://developers.google.com/transit/gtfs/reference/#stopstxt
 	private Transform stops = new TransformBuilder()
 			.withDestination("stops.csv")
 			.withSource("stops.txt")
-			.withMapping("stop_id", "stop_id:ID(Stop)")
-			.withMapping("stop_name", "name")
-			.withMapping("stop_lat", "lat:float")
-			.withMapping("stop_lon", "lon:float")
-			.withMapping("platform_code", "platform_code")
-			.withMapping("location_type", "location_type")	
-			.withIndex("stop_id")
+			.withRequiredMapping("stop_id", "stop_id:ID(Stop)")
+			.withRequiredMapping("stop_name", "name")
+			.withOptionalMapping("stop_lat", "lat:float")
+			.withOptionalMapping("stop_lon", "lon:float")
+			.withOptionalMapping("platform_code", "platform_code")
+			.withOptionalMapping("stop_url", "url")	
+			.withIndex("stop_name")
+			.withUniqueConstraint("stop_id")
+			.withLabel(wheelChairBoardingLabel)
+			.withLabel(stopLocationType)
 			.withType("Stop")
 			.build();
 	
 	private Transform stopPartOfStop = new TransformBuilder()
 			.withDestination("stopPartOfStop.csv")
 			.withSource("stops.txt")
-			.withMapping("stop_id", ":START_ID(Stop)")
-			.withMapping("parent_station", ":END_ID(Stop)")
+			.withRequiredMapping("stop_id", ":START_ID(Stop)")
+			.withRequiredMapping("parent_station", ":END_ID(Stop)")
 			.withRelation("PART_OF")
 			.withSkipPartial(true)
 			.build();
@@ -178,10 +289,9 @@ public class GtfsTransformEngineBuilder {
 			new TransformBuilder()
 				.withDestination("stopTimes.csv")
 				.withSource("stop_times.txt")
-				.withMapping("lineNumber", ":ID(StopTime)")
-				.withMapping("arrival_time", "arrival_time:int")
-				.withMapping("departure_time", "departure_time:int")
-				.withMapping("stop_sequence", "stop_sequence:int")
+				.withRequiredMapping("lineNumber", ":ID(StopTime)")
+				.withRequiredMapping("arrival_time", "arrival_time:int")
+				.withRequiredMapping("departure_time", "departure_time:int")
 				.withType("StopTime")
 				.build()
 			);
@@ -190,8 +300,8 @@ public class GtfsTransformEngineBuilder {
 			new TransformBuilder()
 				.withDestination("stopTimeSequences.csv")
 				.withSource("stop_times.txt")
-				.withMapping("lineNumber", ":START_ID(StopTime)")
-				.withMapping("lineNumberMinus1", ":END_ID(StopTime)")
+				.withRequiredMapping("lineNumber", ":START_ID(StopTime)")
+				.withRequiredMapping("lineNumberMinus1", ":END_ID(StopTime)")
 				.withRelation("PRECEDES")
 				.build()
 			);
@@ -199,18 +309,28 @@ public class GtfsTransformEngineBuilder {
 	private Transform stopTimePartOfTripTimes = new TransformBuilder()
 			.withDestination("stopTimePartOfTripTimes.csv")
 			.withSource("stop_times.txt")
-			.withMapping("lineNumber", ":START_ID(StopTime)")
-			.withMapping("trip_id", ":END_ID(Trip)")
+			.withRequiredMapping("lineNumber", ":START_ID(StopTime)")
+			.withRequiredMapping("trip_id", ":END_ID(Trip)")
 			.withRelation("PART_OF_TRIP")
 			.build();
 	
 	private Transform stopTimeLocatedAtStop = new TransformBuilder()
 			.withDestination("stopTimeLocatedAtStop.csv")
 			.withSource("stop_times.txt")
-			.withMapping("lineNumber", ":START_ID(StopTime)")
-			.withMapping("stop_id", ":END_ID(Stop)")
+			.withRequiredMapping("lineNumber", ":START_ID(StopTime)")
+			.withRequiredMapping("stop_id", ":END_ID(Stop)")
 			.withRelation("LOCATED_AT")
 			.build();	
+	
+	private Transform stopTransferStop = new TransformBuilder()
+			.withDestination("transfers.csv")
+			.withSource("transfers.txt")
+			.withRequiredMapping("from_stop_id", ":START_ID(Stop)")
+			.withRequiredMapping("to_stop_id", ":END_ID(Stop)")
+			.withOptionalMapping("transfer_type", "type")
+			.withOptionalMapping("min_transfer_time", "transfer_time")
+			.withRelation("TRANSFER")
+			.build();		
 	
 	protected File outputDirectory;
 	
@@ -244,6 +364,8 @@ public class GtfsTransformEngineBuilder {
 		engine.add(stopTimePartOfTripTimes);
 		engine.add(stopTimeLocatedAtStop);
 		engine.add(stopTimeSequences);
+		engine.add(stopTransferStop);
+		
 		return engine;
 	}
 	

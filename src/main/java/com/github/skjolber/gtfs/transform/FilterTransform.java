@@ -11,11 +11,11 @@ public class FilterTransform extends DefaultTransform {
 	protected String filter;
 	
 	@Override
-	public void writeNext(Map<String, String> line) {
+	public void write(Map<String, String> line) {
 		String value = line.get(filter);
 		
 		if(value != null && !ids.contains(value)) {
-			super.writeNext(line);
+			super.write(line);
 			ids.add(value);
 		}
 	}

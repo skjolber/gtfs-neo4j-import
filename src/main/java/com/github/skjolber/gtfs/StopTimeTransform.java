@@ -35,7 +35,7 @@ public class StopTimeTransform implements Transform {
 	}
 	
 	@Override
-	public void writeNext(Map<String, String> line) {
+	public void write(Map<String, String> line) {
 		
 		try {
 	        String arrivalTime = line.get("arrival_time");
@@ -47,7 +47,7 @@ public class StopTimeTransform implements Transform {
 	        	line.put("departure_time", Integer.toString(toSeconds(departureTime)));
 	        }
 	        
-	        delegate.writeNext(line);
+	        delegate.write(line);
 		} catch(Exception e) {
 			throw new RuntimeException(e);
 		}
@@ -74,11 +74,11 @@ public class StopTimeTransform implements Transform {
 	}
 
 	@Override
-	public void writeFirst(String[] fields) {
+	public void initialize(String[] fields) {
 		List<String> list = new ArrayList<>(Arrays.asList(fields));
 		list.add("departure_time_int");
 		list.add("arrival_time_int");
-		delegate.writeFirst(list.toArray(new String[list.size()]));
+		delegate.initialize(list.toArray(new String[list.size()]));
 	}
 	
 	@Override
