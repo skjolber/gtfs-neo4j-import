@@ -27,7 +27,7 @@ public class StopTimeTransform implements Transform {
 		return hours * 3600 + localTime.getMinute() * 60 + localTime.getSecond();
 	}
 	
-	
+	protected int previousDepartureTime = -1;
 	protected Transform delegate;
 	
 	public StopTimeTransform(Transform delegate) {
@@ -40,11 +40,22 @@ public class StopTimeTransform implements Transform {
 		try {
 	        String arrivalTime = line.get("arrival_time");
 	        if(arrivalTime != null) {
-	        	line.put("arrival_time", Integer.toString(toSeconds(arrivalTime)));
+	        	int arrivalTimeSeconds = toSeconds(arrivalTime);
+	        	line.put("arrival_time", Integer.toString(arrivalTimeSeconds));
+	        	
+	        	if(previousDepartureTime != -1) {
+	        		line.put("duration", Integer.toString(arrivalTimeSeconds - previousDepartureTime));
+	        	}
 	        }
 	        String departureTime = line.get("departure_time");
 	        if(departureTime != null) {
-	        	line.put("departure_time", Integer.toString(toSeconds(departureTime)));
+	        	
+	        	int departureTimeInSeconds = toSeconds(departureTime);
+	        	line.put("departure_time", Integer.toString(departureTimeInSeconds));
+
+		        previousDepartureTime = departureTimeInSeconds;
+	        } else {
+		        previousDepartureTime = -1;
 	        }
 	        
 	        delegate.write(line);

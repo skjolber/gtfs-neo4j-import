@@ -12,6 +12,8 @@ import com.github.skjolber.gtfs.transform.Transform;
 public class StopTimeSequenceTransform implements Transform {
 
 	private Transform delegate;
+	private int previousStopSequence;
+	private String previousTripId;
 	
 	public StopTimeSequenceTransform(Transform delegate) {
 		this.delegate = delegate;
@@ -21,12 +23,35 @@ public class StopTimeSequenceTransform implements Transform {
 	public void write(Map<String, String> line) {
 		
 		String string = line.get("stop_sequence");
-		if(!string.equals("0")) {
-			int lineNumber = Integer.parseInt(line.get("lineNumber"));
-			line.put("lineNumberMinus1", Integer.toString(lineNumber - 1));
+		if(string != null) {
+			int stopSequence = Integer.parseInt(string);
+			
+			String currentTripId = line.get("trip_id");
+			
+			if(stopSequence > 0) {
+				if(previousStopSequence != -1 && previousTripId != null) {
+					if(stopSequence < previousStopSequence && previousTripId.equals(currentTripId)) {
+						// blow up if not in order - for the same trip
+						throw new IllegalArgumentException("From stop sequence " + previousStopSequence + " to " + stopSequence + " at " + line.get("lineNumber"));
+					}
+				}
+
+				addLineNumberMinusOne(line);
+		        delegate.write(line);
+			}
+			
+			previousStopSequence = stopSequence;
+			
+			previousTripId = currentTripId;
+			
 	        delegate.write(line);
 		}
-        
+
+	}
+
+	private void addLineNumberMinusOne(Map<String, String> line) {
+		int lineNumber = Integer.parseInt(line.get("lineNumber"));
+		line.put("lineNumberMinus1", Integer.toString(lineNumber - 1));
 	}
 
 	@Override

@@ -88,7 +88,7 @@ public class GtfsTransformEngineBuilder {
 			.withRequiredMapping("route_id", "route_id:ID(Route)")
 			.withOptionalMapping("route_short_name", "short_name")
 			.withOptionalMapping("route_long_name", "long_name")
-			.withOptionalMapping("route_type", "type:byte")
+			.withOptionalMapping("route_type", "type:short")
 			.withOptionalMapping("route_url", "url")
 			.withType("Route")
 			.withIndex("route_id")

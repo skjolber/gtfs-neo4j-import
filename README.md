@@ -120,6 +120,7 @@ The transformation is limited to the files
 | calendar_dates.txt | Dates |
 | agency.txt | Agencies |
 | stop_times.txt | Stop times |
+| transfers.txt | Transfers |
 
 and converts stop times to `seconds from midnight`.
 
