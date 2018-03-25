@@ -16,6 +16,13 @@ public class StopTimeTransform implements Transform {
 
 	protected static DateTimeFormatter pattern = DateTimeFormatter.ofPattern("H:mm:ss").withResolverStyle(ResolverStyle.LENIENT);;
 	
+	public static int getTime(Map<String, String> line, String string) {
+        String arrivalTime = line.get(string);
+        if(arrivalTime != null) {
+        	return toSeconds(arrivalTime);
+        }
+		return -1;
+	}
 	
 	public static int toSeconds(String time) {
 		// HH:MM:SS where the HH might be > 24
@@ -38,25 +45,19 @@ public class StopTimeTransform implements Transform {
 	public void write(Map<String, String> line) {
 		
 		try {
-	        String arrivalTime = line.get("arrival_time");
-	        if(arrivalTime != null) {
-	        	int arrivalTimeSeconds = toSeconds(arrivalTime);
-	        	line.put("arrival_time", Integer.toString(arrivalTimeSeconds));
-	        	
-	        	if(previousDepartureTime != -1) {
-	        		line.put("duration", Integer.toString(arrivalTimeSeconds - previousDepartureTime));
-	        	}
-	        }
-	        String departureTime = line.get("departure_time");
-	        if(departureTime != null) {
-	        	
-	        	int departureTimeInSeconds = toSeconds(departureTime);
-	        	line.put("departure_time", Integer.toString(departureTimeInSeconds));
-
-		        previousDepartureTime = departureTimeInSeconds;
-	        } else {
-		        previousDepartureTime = -1;
-	        }
+			int arrivalTimeSeconds = getTime(line, "arrival_time");
+			if(arrivalTimeSeconds != -1) {
+	        	line.put("arrival_time_int", Integer.toString(arrivalTimeSeconds));
+			} 
+			
+			int departeTimeSeconds = getTime(line, "departure_time");
+			if(departeTimeSeconds != -1) {
+	        	line.put("departure_time_int", Integer.toString(departeTimeSeconds));
+			}
+			
+			if(arrivalTimeSeconds != -1 && departeTimeSeconds != -1) {
+	        	line.put("duration_arrival_departure", Integer.toString(departeTimeSeconds - arrivalTimeSeconds));
+			} 
 	        
 	        delegate.write(line);
 		} catch(Exception e) {
@@ -89,6 +90,7 @@ public class StopTimeTransform implements Transform {
 		List<String> list = new ArrayList<>(Arrays.asList(fields));
 		list.add("departure_time_int");
 		list.add("arrival_time_int");
+		list.add("duration_arrival_departure");
 		delegate.initialize(list.toArray(new String[list.size()]));
 	}
 	

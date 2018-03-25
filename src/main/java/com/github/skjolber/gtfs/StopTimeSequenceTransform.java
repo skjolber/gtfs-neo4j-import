@@ -15,6 +15,8 @@ public class StopTimeSequenceTransform implements Transform {
 	private int previousStopSequence;
 	private String previousTripId;
 	
+	private int previousDepartureTime = -1;
+	
 	public StopTimeSequenceTransform(Transform delegate) {
 		this.delegate = delegate;
 	}
@@ -36,10 +38,20 @@ public class StopTimeSequenceTransform implements Transform {
 					}
 					addLineNumberMinusOne(line);
 					
+					
+					if(previousDepartureTime != -1) {
+						int arrivalTime = StopTimeTransform.getTime(line, "arrival_time");
+						if(arrivalTime != -1) {
+							line.put("duration_departure_arrival", Integer.toString(arrivalTime - previousDepartureTime));
+						}
+						
+					}					
+					
 			        delegate.write(line);
 				}
 			}
 			
+			previousDepartureTime = StopTimeTransform.getTime(line, "departure_time");
 			previousStopSequence = stopSequence;
 			previousTripId = currentTripId;
 			
@@ -75,6 +87,7 @@ public class StopTimeSequenceTransform implements Transform {
 	public void initialize(String[] fields) {
 		List<String> list = new ArrayList<>(Arrays.asList(fields));
 		list.add("lineNumberMinus1");
+		list.add("duration_departure_arrival");
 		delegate.initialize(list.toArray(new String[list.size()]));
 	}
 

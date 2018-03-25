@@ -196,8 +196,9 @@ public class GtfsTransformEngineBuilder {
 				.withDestination("stopTimes.csv")
 				.withSource("stop_times.txt")
 				.withRequiredMapping("lineNumber", ":ID(StopTime)")
-				.withRequiredMapping("arrival_time", "arrival_time:int")
-				.withRequiredMapping("departure_time", "departure_time:int")
+				.withRequiredMapping("arrival_time_int", "arrival_time:int")
+				.withRequiredMapping("departure_time_int", "departure_time:int")
+				.withOptionalMapping("duration_arrival_departure", "duration:int")
 				.withType("StopTime")
 				.build()
 			);
@@ -208,6 +209,7 @@ public class GtfsTransformEngineBuilder {
 				.withSource("stop_times.txt")
 				.withRequiredMapping("lineNumber", ":START_ID(StopTime)")
 				.withRequiredMapping("lineNumberMinus1", ":END_ID(StopTime)")
+				.withOptionalMapping("duration_departure_arrival", "duration:int")
 				.withRelation("PRECEDES")
 				.build()
 			);
