@@ -20,101 +20,6 @@ import com.github.skjolber.gtfs.transform.TransformEngine;
 
 public class GtfsTransformEngineBuilder {
 
-	private LabelTransform wheelChairLabel = new AbstractLabelTransform("wheelchair_accessible") {
-		@Override
-		public String transformLabel(String value) {
-			if(value != null && value.equals("1")) {
-				return "WHEELCHAIR";
-			}
-			return null;
-		}
-	}; 
-
-	private LabelTransform wheelChairBoardingLabel = new AbstractLabelTransform("wheelchair_boarding") {
-		@Override
-		public String transformLabel(String value) {
-			if(value != null && value.equals("1")) {
-				return "WHEELCHAIR_BOARDING";
-			}
-			return null;
-		}
-	}; 
-	
-	private LabelTransform stopLocationType = new AbstractLabelTransform("location_type") {
-		@Override
-		public String transformLabel(String value) {
-			if(value != null) {
-				if(value.equals("1")) {
-					return "STATION";
-				} else if(value.equals("2")) {
-					return "STATION_ENTRANCE";
-				}
-			}
-			return null;
-		}
-	}; 
-	
-	private LabelTransform bikeLabel = new AbstractLabelTransform("bikes_allowed") {
-		@Override
-		public String transformLabel(String value) {
-			if(value != null && value.equals("1")) {
-				return "BIKE";
-			}
-			return null;
-		}
-	}; 
-	
-	private LabelTransform directionLabel = new AbstractLabelTransform("direction_id") {
-		@Override
-		public String transformLabel(String value) {
-			if(value != null) {
-				if(value.equals("1")) {
-					return "INBOUND";
-				} else if(value.equals("2")) {
-					return "OUTBOUND";
-				}
-			}
-			return null;
-		}
-	}; 
-
-/*	
-	private LabelTransform routeTypeLabel = new AbstractLabelTransform("route_type") {
-		@Override
-		public String transformLabel(String value) {
-			if(value != null) {
-				switch(value) {
-				case "0" : {
-					return "TRAM_STREETCAR_LIGHT_RAIL";
-				}
-				case "1" : {
-					return "SUBWAY";
-				}
-				case "2" : {
-					return "RAIL";
-				}
-				case "3" : {
-					return "BUS";
-				}
-				case "4" : {
-					return "FERRY";
-				}
-				case "5" : {
-					return "CABLE_CAR";
-				}
-				case "6" : {
-					return "GONDOLA";
-				}
-				case "7" : {
-					return "FUNICULAR";
-				}
-				}
-			}
-			return null;
-		}
-	}; 
-	*/
-
 	// trips:
 	//  - trip
 	//  - service
@@ -125,11 +30,10 @@ public class GtfsTransformEngineBuilder {
 			.withDestination("trips.csv")
 			.withSource("trips.txt")
 			.withRequiredMapping("trip_id", "trip_id:ID(Trip)")
+			.withOptionalMapping("wheelchair_accessible", "wheelchair_accessible:byte")
+			.withOptionalMapping("bikes_allowed", "bikes_allowed:byte")
 			.withIndex("trip_id")
 			.withType("Trip")
-			.withLabel(wheelChairLabel)
-			.withLabel(bikeLabel)
-			.withLabel(directionLabel)
 			.build();
 	
 	private Transform services = new TransformBuilder()
@@ -146,6 +50,7 @@ public class GtfsTransformEngineBuilder {
 			.withSource("trips.txt")
 			.withRequiredMapping("trip_id", ":START_ID(Trip)")
 			.withRequiredMapping("route_id", ":END_ID(Route)")
+			.withOptionalMapping("direction_id", "direction_id:byte")
 			.withRelation("USES")
 			.build();
 
@@ -183,7 +88,7 @@ public class GtfsTransformEngineBuilder {
 			.withRequiredMapping("route_id", "route_id:ID(Route)")
 			.withOptionalMapping("route_short_name", "short_name")
 			.withOptionalMapping("route_long_name", "long_name")
-			.withOptionalMapping("route_type", "type:int")
+			.withOptionalMapping("route_type", "type:byte")
 			.withOptionalMapping("route_url", "url")
 			.withType("Route")
 			.withIndex("route_id")
@@ -268,11 +173,12 @@ public class GtfsTransformEngineBuilder {
 			.withOptionalMapping("stop_lat", "lat:float")
 			.withOptionalMapping("stop_lon", "lon:float")
 			.withOptionalMapping("platform_code", "platform_code")
+			.withOptionalMapping("stop_timezone", "timezone")
 			.withOptionalMapping("stop_url", "url")	
+			.withOptionalMapping("location_type", "type")	
+			.withOptionalMapping("wheelchair_boarding", "wheelchair_boarding")	
 			.withIndex("stop_name")
 			.withUniqueConstraint("stop_id")
-			.withLabel(wheelChairBoardingLabel)
-			.withLabel(stopLocationType)
 			.withType("Stop")
 			.build();
 	
