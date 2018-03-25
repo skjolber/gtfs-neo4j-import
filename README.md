@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/skjolber/gtfs-neo4j-import.svg?branch=master)](https://travis-ci.org/skjolber/gtfs-neo4j-import)
+
 # gtfs-neo4j-import
 Tool for [General Transit Feed Specification] import to the [Neo4j] graph database. Converts GTFS ZIP files to CSV files importable to Neo4j.
 
