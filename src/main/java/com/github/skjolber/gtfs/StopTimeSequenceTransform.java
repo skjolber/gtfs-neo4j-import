@@ -34,19 +34,16 @@ public class StopTimeSequenceTransform implements Transform {
 						// blow up if not in order - for the same trip
 						throw new IllegalArgumentException("From stop sequence " + previousStopSequence + " to " + stopSequence + " at " + line.get("lineNumber"));
 					}
+					addLineNumberMinusOne(line);
+					
+			        delegate.write(line);
 				}
-
-				addLineNumberMinusOne(line);
-		        delegate.write(line);
 			}
 			
 			previousStopSequence = stopSequence;
-			
 			previousTripId = currentTripId;
 			
-	        delegate.write(line);
 		}
-
 	}
 
 	private void addLineNumberMinusOne(Map<String, String> line) {
